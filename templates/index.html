@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Browse · Movie Explorer{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1 class="display">Find your next<br><em>favourite film.</em></h1>
+    <p class="lede">Browse the catalogue, search by title, filter by genre or year,
+       then rate, review and build your watchlist.</p>
+</section>
+
+<form class="filters" method="get" action="{{ url_for('index') }}">
+    <div class="search-field">
+        <input type="text" name="q" value="{{ q }}"
+               placeholder="Search titles — regex allowed, e.g. ^The|Dune">
+    </div>
+
+    <select name="genre">
+        <option value="">All genres</option>
+        {% for g in genres %}
+            <option value="{{ g.genre_id }}"
+                {{ 'selected' if g.genre_id == selected_genre else '' }}>
+                {{ g.name }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <select name="year">
+        <option value="">Any year</option>
+        {% for y in years %}
+            <option value="{{ y.year }}"
+                {{ 'selected' if y.year == selected_year else '' }}>
+                {{ y.year }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit" class="btn">Apply</button>
+    {% if q or selected_genre or selected_year %}
+        <a class="btn btn-ghost" href="{{ url_for('index') }}">Clear</a>
+    {% endif %}
+</form>
+
+{% if regex_error %}
+    <p class="error">{{ regex_error }}</p>
+{% endif %}
+
+<p class="result-count">{{ movies|length }} film{{ '' if movies|length == 1 else 's' }}</p>
+
+<div class="grid">
+    {% for m in movies %}
+    <a class="card" href="{{ url_for('movie_detail', movie_id=m.movie_id) }}">
+        <div class="card-top">
+            <span class="score">{{ '%g' % m.avg_rating }}</span>
+            <span class="score-label">avg</span>
+        </div>
+        <h2 class="card-title">{{ m.title }}</h2>
+        <p class="card-meta">{{ m.year }}{% if m.genres %} · {{ m.genres }}{% endif %}</p>
+        <p class="card-desc">{{ m.description }}</p>
+        <p class="card-stats">
+            {{ m.rating_count }} rating{{ '' if m.rating_count == 1 else 's' }} ·
+            {{ m.review_count }} review{{ '' if m.review_count == 1 else 's' }}
+        </p>
+    </a>
+    {% else %}
+        <p class="empty">No films match your filters.</p>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Movie Explorer{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="{{ url_for('index') }}">
+            <span class="brand-mark">▮▮▮</span>
+            <span class="brand-name">Movie&nbsp;Explorer</span>
+        </a>
+
+        <nav class="nav">
+            <a href="{{ url_for('index') }}">Browse</a>
+            <a href="{{ url_for('watchlist') }}">Watchlist</a>
+        </nav>
+
+        <form class="user-switch" action="{{ url_for('switch_user') }}" method="post">
+            <label for="user_id">Viewing as</label>
+            <select id="user_id" name="user_id" onchange="this.form.submit()">
+                {% for u in all_users %}
+                    <option value="{{ u.user_id }}"
+                        {{ 'selected' if u.user_id == current_user_id else '' }}>
+                        {{ u.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </header>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash-wrap">
+                {% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <span>Movie Explorer · DIS project</span>
+    </footer>
+</body>
+</html>

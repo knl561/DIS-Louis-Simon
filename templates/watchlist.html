@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Watchlist · Movie Explorer{% endblock %}
+
+{% block content %}
+<h1 class="display">Your watchlist</h1>
+
+<div class="grid">
+    {% for m in movies %}
+    <a class="card" href="{{ url_for('movie_detail', movie_id=m.movie_id) }}">
+        <div class="card-top">
+            <span class="score">{{ '%g' % m.avg_rating }}</span>
+            <span class="score-label">avg</span>
+        </div>
+        <h2 class="card-title">{{ m.title }}</h2>
+        <p class="card-meta">{{ m.year }}{% if m.genres %} · {{ m.genres }}{% endif %}</p>
+        <p class="card-desc">{{ m.description }}</p>
+    </a>
+    {% else %}
+        <p class="empty">Your watchlist is empty. Add films while browsing.</p>
+    {% endfor %}
+</div>
+{% endblock %}

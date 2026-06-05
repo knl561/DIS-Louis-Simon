@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ movie.title }} · Movie Explorer{% endblock %}
+
+{% block content %}
+<a class="back" href="{{ url_for('index') }}">← Back to browse</a>
+
+<article class="detail">
+    <header class="detail-head">
+        <div>
+            <h1 class="display detail-title">{{ movie.title }}</h1>
+            <p class="card-meta">
+                {{ movie.year }}{% if movie.genres %} · {{ movie.genres }}{% endif %}
+            </p>
+        </div>
+        <div class="big-score">
+            <span class="big-score-num">{{ '%g' % movie.avg_rating }}</span>
+            <span class="big-score-label">{{ movie.rating_count }} ratings</span>
+        </div>
+    </header>
+
+    <p class="detail-desc">{{ movie.description }}</p>
+
+    <div class="actions">
+        <form method="post" action="{{ url_for('rate_movie', movie_id=movie.movie_id) }}"
+              class="rate-form">
+            <label for="score">Your rating</label>
+            <select id="score" name="score">
+                {% for s in range(1, 11) %}
+                    <option value="{{ s }}" {{ 'selected' if s == my_rating else '' }}>
+                        {{ s }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn">Save rating</button>
+        </form>
+
+        <form method="post"
+              action="{{ url_for('toggle_watchlist', movie_id=movie.movie_id) }}">
+            <button type="submit" class="btn {{ 'btn-active' if on_watchlist else 'btn-ghost' }}">
+                {{ '✓ On your watchlist' if on_watchlist else '+ Add to watchlist' }}
+            </button>
+        </form>
+    </div>
+</article>
+
+<section class="reviews">
+    <h2 class="section-title">Reviews</h2>
+
+    <form class="review-form" method="post"
+          action="{{ url_for('review_movie', movie_id=movie.movie_id) }}">
+        <textarea name="text" rows="3" placeholder="Write a review…"></textarea>
+        <button type="submit" class="btn">Post review</button>
+    </form>
+
+    {% for r in reviews %}
+        <div class="review">
+            <p class="review-text">{{ r.text }}</p>
+            <p class="review-meta">— {{ r.author }}, {{ r.created_at.strftime('%d %b %Y') }}</p>
+        </div>
+    {% else %}
+        <p class="empty">No reviews yet. Be the first.</p>
+    {% endfor %}
+</section>
+{% endblock %}
