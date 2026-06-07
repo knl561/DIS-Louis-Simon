@@ -1,10 +1,4 @@
--- ============================================================
---  Movie Explorer — database schema
---  Faithful to the E/R model:
---    User, Movie, Genre, MovieGenre, Review, Rating, WatchlistEntry
--- ============================================================
-
--- Drop in dependency order so the script is re-runnable.
+-- Drop everything first so we can re-run the script without errors
 DROP VIEW  IF EXISTS movie_overview        CASCADE;
 DROP TABLE IF EXISTS watchlist_entries     CASCADE;
 DROP TABLE IF EXISTS ratings               CASCADE;
@@ -14,20 +8,14 @@ DROP TABLE IF EXISTS genres                CASCADE;
 DROP TABLE IF EXISTS movies                CASCADE;
 DROP TABLE IF EXISTS users                 CASCADE;
 
--- ------------------------------------------------------------
---  Entities
--- ------------------------------------------------------------
-
--- User( user_id, name, email )
+-- Core tables for our entities
 CREATE TABLE users (
     user_id  SERIAL PRIMARY KEY,
     name     TEXT NOT NULL,
     email    TEXT NOT NULL UNIQUE
 );
 
--- Movie( movie_id, title, year, description, avg_rating )
--- avg_rating is a derived value; it is maintained automatically
--- by a trigger (see below) whenever ratings change.
+-- The avg_rating here is calculated automatically by a trigger further down
 CREATE TABLE movies (
     movie_id    SERIAL PRIMARY KEY,
     title       TEXT NOT NULL,
@@ -36,24 +24,19 @@ CREATE TABLE movies (
     avg_rating  NUMERIC(3,1) NOT NULL DEFAULT 0
 );
 
--- Genre( genre_id, name )
 CREATE TABLE genres (
     genre_id SERIAL PRIMARY KEY,
     name     TEXT NOT NULL UNIQUE
 );
 
--- ------------------------------------------------------------
---  Relationships
--- ------------------------------------------------------------
-
--- MovieGenre( movie_id, genre_id ) — many-to-many between Movie and Genre
+-- Connecting tables and relationships
+-- Many-to-many link between movies and genres
 CREATE TABLE movie_genres (
     movie_id INTEGER NOT NULL REFERENCES movies(movie_id) ON DELETE CASCADE,
     genre_id INTEGER NOT NULL REFERENCES genres(genre_id) ON DELETE CASCADE,
     PRIMARY KEY (movie_id, genre_id)
 );
 
--- Review( review_id, user_id, movie_id, text, created_at )
 CREATE TABLE reviews (
     review_id  SERIAL PRIMARY KEY,
     user_id    INTEGER NOT NULL REFERENCES users(user_id)  ON DELETE CASCADE,
@@ -62,8 +45,7 @@ CREATE TABLE reviews (
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Rating( rating_id, user_id, movie_id, score )
--- One rating per (user, movie); re-rating UPDATEs the existing row.
+-- Users can only rate a movie once. Submitting again will update the score
 CREATE TABLE ratings (
     rating_id SERIAL PRIMARY KEY,
     user_id   INTEGER NOT NULL REFERENCES users(user_id)  ON DELETE CASCADE,
@@ -72,7 +54,6 @@ CREATE TABLE ratings (
     UNIQUE (user_id, movie_id)
 );
 
--- WatchlistEntry( user_id, movie_id, added_at )
 CREATE TABLE watchlist_entries (
     user_id  INTEGER NOT NULL REFERENCES users(user_id)  ON DELETE CASCADE,
     movie_id INTEGER NOT NULL REFERENCES movies(movie_id) ON DELETE CASCADE,
@@ -80,16 +61,12 @@ CREATE TABLE watchlist_entries (
     PRIMARY KEY (user_id, movie_id)
 );
 
--- ============================================================
---  BONUS: stored function + trigger
---  Keeps movies.avg_rating in sync with the ratings table.
--- ============================================================
+-- Trigger function to keep movies.avg_rating updated whenever scores change
 CREATE OR REPLACE FUNCTION recompute_avg_rating()
 RETURNS TRIGGER AS $$
 DECLARE
     target_movie INTEGER;
 BEGIN
-    -- On DELETE the changed row is in OLD, otherwise in NEW.
     IF (TG_OP = 'DELETE') THEN
         target_movie := OLD.movie_id;
     ELSE
@@ -103,7 +80,7 @@ BEGIN
                  WHERE movie_id = target_movie), 0)
      WHERE movie_id = target_movie;
 
-    RETURN NULL;  -- AFTER trigger: return value is ignored
+    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -111,11 +88,7 @@ CREATE TRIGGER trg_ratings_avg
 AFTER INSERT OR UPDATE OR DELETE ON ratings
 FOR EACH ROW EXECUTE FUNCTION recompute_avg_rating();
 
--- ============================================================
---  BONUS: view
---  One row per movie with its genres, review count and rating count.
---  Used by the browse / search / filter page.
--- ============================================================
+-- Main view used by the app to grab a movie along with its statistics and genres
 CREATE OR REPLACE VIEW movie_overview AS
 SELECT
     m.movie_id,

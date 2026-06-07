@@ -1,15 +1,10 @@
--- ============================================================
---  Movie Explorer — sample data
---  Run AFTER schema.sql.
--- ============================================================
-
--- Users -----------------------------------------------------
+-- Add some test users
 INSERT INTO users (name, email) VALUES
     ('Simon',  'simon@example.com'),
     ('Alex',   'alex@example.com'),
     ('Maria',  'maria@example.com');
 
--- Genres ----------------------------------------------------
+-- Populate available genres
 INSERT INTO genres (name) VALUES
     ('Action'),
     ('Drama'),
@@ -20,7 +15,7 @@ INSERT INTO genres (name) VALUES
     ('Crime'),
     ('Romance');
 
--- Movies ----------------------------------------------------
+-- Insert initial film catalogue
 INSERT INTO movies (title, year, description) VALUES
     ('Blade Runner 2049', 2017, 'A young blade runner uncovers a secret that could plunge what is left of society into chaos.'),
     ('The Grand Budapest Hotel', 2014, 'A concierge and his protege become embroiled in the theft of a priceless painting.'),
@@ -35,8 +30,7 @@ INSERT INTO movies (title, year, description) VALUES
     ('Dune', 2021, 'A noble family becomes embroiled in a war over a desert planet and its precious resource.'),
     ('The Social Network', 2010, 'The founding of a social-networking website and the lawsuits that followed.');
 
--- Movie <-> Genre links -------------------------------------
--- (resolve ids by title/name so the script is order-independent)
+-- Connect movies to genres using titles and names instead of hardcoded IDs
 INSERT INTO movie_genres (movie_id, genre_id)
 SELECT m.movie_id, g.genre_id
 FROM (VALUES
@@ -66,7 +60,7 @@ FROM (VALUES
 JOIN movies m ON m.title = link.title
 JOIN genres g ON g.name  = link.gname;
 
--- Ratings (the trigger will fill in movies.avg_rating) -------
+-- Add initial movie ratings (the trigger updates movies.avg_rating automatically)
 INSERT INTO ratings (user_id, movie_id, score)
 SELECT u.user_id, m.movie_id, r.score
 FROM (VALUES
@@ -83,7 +77,7 @@ FROM (VALUES
 JOIN users  u ON u.name  = r.uname
 JOIN movies m ON m.title = r.title;
 
--- Reviews ---------------------------------------------------
+-- Add sample user reviews
 INSERT INTO reviews (user_id, movie_id, text)
 SELECT u.user_id, m.movie_id, rv.text
 FROM (VALUES
@@ -94,7 +88,7 @@ FROM (VALUES
 JOIN users  u ON u.name  = rv.uname
 JOIN movies m ON m.title = rv.title;
 
--- Watchlist -------------------------------------------------
+-- Add movies to sample watchlists
 INSERT INTO watchlist_entries (user_id, movie_id)
 SELECT u.user_id, m.movie_id
 FROM (VALUES
