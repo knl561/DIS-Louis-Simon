@@ -28,7 +28,7 @@ body {
 
 a { color: inherit; text-decoration: none; }
 
-/* ---------- header ---------- */
+/* Navigation and top header */
 .site-header {
     display: flex;
     align-items: center;
@@ -64,10 +64,10 @@ select:focus, input:focus, textarea:focus {
     border-color: var(--accent);
 }
 
-/* ---------- layout ---------- */
+/* Base container */
 .container { max-width: 1100px; margin: 0 auto; padding: 2.5rem 2rem 4rem; }
 
-/* ---------- hero ---------- */
+/* Hero section */
 .hero { margin-bottom: 2.5rem; }
 .display {
     font-family: var(--display);
@@ -80,7 +80,7 @@ select:focus, input:focus, textarea:focus {
 .hero .display em { color: var(--accent); font-style: italic; }
 .lede { color: var(--muted); max-width: 46ch; margin-top: 1rem; font-size: 1.05rem; }
 
-/* ---------- filters ---------- */
+/* Filter settings */
 .filters {
     display: flex;
     flex-wrap: wrap;
@@ -120,7 +120,7 @@ select:focus, input:focus, textarea:focus {
 .result-count { color: var(--muted); font-size: .9rem; margin: .2rem 0 1.4rem; }
 .error { color: var(--danger); font-weight: 500; }
 
-/* ---------- grid of cards ---------- */
+/* Movie overview cards */
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -164,7 +164,7 @@ select:focus, input:focus, textarea:focus {
 .card-stats { color: var(--muted); font-size: .8rem; margin-top: auto; padding-top: .6rem; }
 .empty { color: var(--muted); grid-column: 1 / -1; }
 
-/* ---------- detail page ---------- */
+/* Single movie page */
 .back { color: var(--muted); font-size: .9rem; }
 .back:hover { color: var(--accent); }
 .detail { margin: 1.4rem 0 2rem; }
@@ -179,7 +179,7 @@ select:focus, input:focus, textarea:focus {
 .rate-form { display: flex; align-items: center; gap: .6rem; }
 .rate-form label { color: var(--muted); font-size: .9rem; }
 
-/* ---------- reviews ---------- */
+/* User comments and text blocks */
 .reviews { border-top: 1px solid var(--line); padding-top: 2rem; }
 .section-title { font-family: var(--display); font-weight: 600; font-size: 1.6rem; margin: 0 0 1.2rem; }
 .review-form { display: flex; flex-direction: column; gap: .6rem; max-width: 640px; margin-bottom: 2rem; }
@@ -189,7 +189,7 @@ select:focus, input:focus, textarea:focus {
 .review-text { margin: 0; }
 .review-meta { color: var(--muted); font-size: .85rem; margin: .3rem 0 0; }
 
-/* ---------- flash + footer ---------- */
+/* Status banners and lower footer */
 .flash-wrap { max-width: 1100px; margin: 1rem auto 0; padding: 0 2rem; }
 .flash {
     background: #20281f;
