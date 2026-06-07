@@ -42,41 +42,69 @@ See `db/schema.sql`.
 
 ## 1. Compile / set up
 
+From the project root directory, run the following commands to set up the virtual environment:
+
+### macOS / Linux
 ```bash
-# from the project root
 python3 -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### Windows (PowerShell)
+If you get an execution policy error when activating, allow scripts for the current process first:
+```powershell
+python -m venv .venv
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+---
+
 ## 2. Initialise the database
 
-Make sure PostgreSQL is running, then:
+Make sure PostgreSQL is running, then follow the instructions for your OS:
 
+### macOS / Linux (Automated via script)
 ```bash
 bash scripts/init_db.sh
 ```
-
-This creates a database called `movie_explorer` and loads `db/schema.sql`
-followed by `db/seed.sql`. To use different connection details:
-
+*To use different connection details:*
 ```bash
 DB_NAME=movie_explorer PGUSER=postgres PGHOST=localhost bash scripts/init_db.sh
 ```
 
-(You can also run the two SQL files by hand:
-`psql -d movie_explorer -f db/schema.sql` then `... -f db/seed.sql`.)
+### Windows (Manual via pgAdmin 4)
+Since shell scripts do not run natively in Windows PowerShell, initialize the database manually:
+1. Open **pgAdmin 4** and log in.
+2. Right-click **Databases** → **Create** → **Database...**
+3. Name it `movie_explorer` and click **Save**.
+4. Right-click the new `movie_explorer` database and select **Query Tool**.
+5. Open `db/schema.sql`, copy all text (skipping any introductory comments if syntax errors occur), paste it into the Query Tool, and click **Execute (F5)**.
+6. Clear the Query Tool, open `db/seed.sql`, copy its content, paste it into the tool, and click **Execute (F5)**.
+
+---
 
 ## 3. Run
 
-```bash
-# tell the app how to reach the database (adjust user/password as needed)
-export DATABASE_URL="postgresql://postgres@localhost:5432/movie_explorer"
+Configure the database URL environment variable (replace `YOUR_PASSWORD` with your actual PostgreSQL root password) and start the Flask development server:
 
+### macOS / Linux
+```bash
+export DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/movie_explorer"
 python app.py
 ```
 
-Then open <http://localhost:5001>.
+### Windows (PowerShell)
+```powershell
+\$env:DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/movie_explorer"
+python app.py
+```
+
+Then open <http://localhost:5001> in your web browser.
+
+---
 
 ## 4. Interact
 
