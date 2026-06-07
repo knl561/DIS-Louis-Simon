@@ -67,6 +67,7 @@ pip install -r requirements.txt
 Make sure PostgreSQL is running, then follow the instructions for your OS:
 
 ### macOS / Linux (Automated via script)
+The `scripts/` folder contains a shell script designed specifically for UNIX-based systems:
 ```bash
 bash scripts/init_db.sh
 ```
