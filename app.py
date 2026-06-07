@@ -1,14 +1,13 @@
 """
-Movie Explorer — a small Flask web-app on top of PostgreSQL.
+This is our Flask app for Movie Explorer running on top of PostgreSQL.
 
-Demonstrates, as required by the project brief:
-  * SQL interaction (SELECT / INSERT / UPDATE)
-  * Regular-expression matching (PostgreSQL POSIX `~*`, see /search)
-  * Bonus: a view (movie_overview), a trigger + stored function (avg_rating)
+It shows off the course requirements:
+  * SQL actions like SELECT, INSERT, and UPDATE.
+  * Regex search using Postgres POSIX (~* operator).
+  * Bonus items like our view (movie_overview) and the rating trigger.
 
-There is no login system. Instead a "current user" is kept in the session
-and can be switched from the header — enough to make ratings, reviews and
-watchlists meaningful without building authentication.
+We didn't build a full login system with passwords. Instead, we just track the 
+active user in the session. You can swap users in the header to test ratings and watchlists.
 """
 import re
 from flask import (
@@ -21,11 +20,11 @@ app = Flask(__name__)
 app.secret_key = "dev-secret-change-me"  # only used for flash + session
 
 
-# ----------------------------------------------------------------------
-#  Current-user helpers (stand-in for real authentication)
-# ----------------------------------------------------------------------
 def current_user_id():
-    """The active user id, defaulting to the first user in the database."""
+    """
+    Finds the active user ID. If nobody is picked yet, it just defaults 
+    to the first user in the database so the app doesn't break.
+    """
     uid = session.get("user_id")
     if uid is None:
         row = db.query_one("SELECT user_id FROM users ORDER BY user_id LIMIT 1")
@@ -36,22 +35,21 @@ def current_user_id():
 
 @app.context_processor
 def inject_users():
-    """Make the user list + current user available to every template."""
+    """Makes sure all templates can see the user list and who is active."""
     users = db.query("SELECT user_id, name FROM users ORDER BY name")
     return {"all_users": users, "current_user_id": current_user_id()}
 
 
 @app.route("/switch-user", methods=["POST"])
 def switch_user():
+    """Saves the newly picked user to the session and reloads the page."""
     session["user_id"] = int(request.form["user_id"])
     return redirect(request.referrer or url_for("index"))
 
 
-# ----------------------------------------------------------------------
-#  Browse / search / filter  (SELECT + regex)
-# ----------------------------------------------------------------------
 @app.route("/")
 def index():
+    """Handles the main browse page, including text searches and dropdown filters."""
     q = (request.args.get("q") or "").strip()
     genre_id = request.args.get("genre")
     year = request.args.get("year")
@@ -60,11 +58,11 @@ def index():
     params = []
     regex_error = None
 
-    # --- Regular-expression matching on the title ---
-    # The search box is treated as a POSIX regular expression and matched
-    # case-insensitively with PostgreSQL's `~*` operator. We validate the
-    # pattern in Python first so a bad pattern gives a friendly message
-    # instead of a database error.
+    """
+    Checks the search box text against the title using Postgres regex (~*).
+    We test it in Python first so a typo in the regex shows a nice message 
+    instead of crashing the database.
+    """
     if q:
         try:
             re.compile(q)
@@ -74,6 +72,7 @@ def index():
             regex_error = f"Invalid search pattern: {exc}"
 
     if genre_id:
+        """Filters the movie list by checking if the genre connection exists."""
         where.append(
             "EXISTS (SELECT 1 FROM movie_genres mg "
             "WHERE mg.movie_id = mo.movie_id AND mg.genre_id = %s)"
@@ -81,6 +80,7 @@ def index():
         params.append(int(genre_id))
 
     if year:
+        """Filters movies by the exact release year."""
         where.append("mo.year = %s")
         params.append(int(year))
 
@@ -108,11 +108,9 @@ def index():
     )
 
 
-# ----------------------------------------------------------------------
-#  Movie detail
-# ----------------------------------------------------------------------
 @app.route("/movie/<int:movie_id>")
 def movie_detail(movie_id):
+    """Loads the specific page for a single film along with its reviews and user status."""
     movie = db.query_one(
         "SELECT * FROM movie_overview WHERE movie_id = %s", (movie_id,)
     )
@@ -146,13 +144,10 @@ def movie_detail(movie_id):
     )
 
 
-# ----------------------------------------------------------------------
-#  Write operations: rate / review / watchlist  (INSERT + UPDATE)
-# ----------------------------------------------------------------------
 @app.route("/movie/<int:movie_id>/rate", methods=["POST"])
 def rate_movie(movie_id):
+    """Saves a score. Uses an ON CONFLICT upsert so users update their old score instead of duplicating rows."""
     score = int(request.form["score"])
-    # One rating per (user, movie): INSERT, or UPDATE if it already exists.
     db.execute(
         """INSERT INTO ratings (user_id, movie_id, score)
                 VALUES (%s, %s, %s)
@@ -166,6 +161,7 @@ def rate_movie(movie_id):
 
 @app.route("/movie/<int:movie_id>/review", methods=["POST"])
 def review_movie(movie_id):
+    """Saves a text review for the movie as long as the comment box wasn't empty."""
     text = (request.form.get("text") or "").strip()
     if text:
         db.execute(
@@ -178,6 +174,7 @@ def review_movie(movie_id):
 
 @app.route("/movie/<int:movie_id>/watchlist", methods=["POST"])
 def toggle_watchlist(movie_id):
+    """Flips the watchlist button. Removes the film if it's there, adds it if it isn't."""
     uid = current_user_id()
     exists = db.query_one(
         "SELECT 1 FROM watchlist_entries WHERE movie_id = %s AND user_id = %s",
@@ -198,11 +195,9 @@ def toggle_watchlist(movie_id):
     return redirect(request.referrer or url_for("movie_detail", movie_id=movie_id))
 
 
-# ----------------------------------------------------------------------
-#  Watchlist page
-# ----------------------------------------------------------------------
 @app.route("/watchlist")
 def watchlist():
+    """Gathers and shows all the films saved by the active user, sorting by newest additions first."""
     movies = db.query(
         """SELECT mo.*, w.added_at
              FROM watchlist_entries w
