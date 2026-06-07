@@ -160,11 +160,6 @@ movie-explorer/
 
 ## AI declaration
 
-This project was developed with assistance from an AI assistant (Anthropic's
-Claude). AI was used to help scaffold the Flask application structure, the
-PostgreSQL schema, and the HTML/CSS, based on the group's E/R model and
-project idea. All AI-assisted code was reviewed and tested by the group.
+This project was developed with assistance from an AI assistant. AI was used to help scaffold the 
+Flask application structure. All AI-assisted code was reviewed and tested by the group.
 
-<!-- Adjust this declaration to reflect your group's actual usage before
-     submitting. If no AI was used on a part, say so; the brief requires the
-     declaration either way. -->
